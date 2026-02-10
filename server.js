@@ -1,41 +1,157 @@
-// Import Express - the web framework we're using
+// Import Express
 const express = require('express');
-
-// Create an Express application
 const app = express();
 
 // Middleware to parse JSON request bodies
+// This MUST come before your routes!
 app.use(express.json());
 
-// Route 1: Homepage
+// In-memory storage (temporary - we'll use a database later)
+let users = [];
+let nextUserId = 1;
+
+// ==========================================
+// ROUTES
+// ==========================================
+
+// Homepage - show available endpoints
 app.get('/', (req, res) => {
   res.json({
     message: 'Welcome to Wishlist API!',
     version: '1.0.0',
-    timestamp: new Date().toISOString()
+    endpoints: {
+      health: 'GET /health',
+      echo: 'POST /api/echo',
+      users: {
+        getAll: 'GET /api/users',
+        getOne: 'GET /api/users/:id',
+        create: 'POST /api/users'
+      }
+    }
   });
 });
 
-// Route 2: Health check
+// Health check
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    usersCount: users.length
   });
 });
 
-// Route 3: Greet someone
-app.get('/greet/:name', (req, res) => {
-  const name = req.params.name;
+// Echo endpoint - test POST requests
+app.post('/api/echo', (req, res) => {
+  console.log('Received:', req.body);
+  
   res.json({
-    message: `Hello, ${name}!`,
+    message: 'Echo! I received your data',
+    youSent: req.body,
     timestamp: new Date().toISOString()
   });
 });
 
-// Start the server on port 5000
+// Get all users
+app.get('/api/users', (req, res) => {
+  res.json({
+    success: true,
+    count: users.length,
+    users: users
+  });
+});
+
+// Get single user by ID
+app.get('/api/users/:id', (req, res) => {
+  const userId = parseInt(req.params.id);
+  const user = users.find(u => u.id === userId);
+  
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: `User with ID ${userId} not found`
+    });
+  }
+  
+  res.json({
+    success: true,
+    user: user
+  });
+});
+
+// Create new user
+app.post('/api/users', (req, res) => {
+  // Extract data from request body
+  const { username, email, age } = req.body;
+  
+  // Validation: Check required fields
+  if (!username || !email) {
+    return res.status(400).json({
+      success: false,
+      message: 'Missing required fields',
+      required: ['username', 'email']
+    });
+  }
+  
+  // Validation: Check username length
+  if (username.length < 3) {
+    return res.status(400).json({
+      success: false,
+      message: 'Username must be at least 3 characters long'
+    });
+  }
+  
+  // Validation: Check email format (basic)
+  if (!email.includes('@')) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid email format'
+    });
+  }
+  
+  // Validation: Check if username already exists
+  const existingUser = users.find(u => u.username === username);
+  if (existingUser) {
+    return res.status(400).json({
+      success: false,
+      message: 'Username already taken'
+    });
+  }
+  
+  // Create new user object
+  const newUser = {
+    id: nextUserId++,
+    username: username,
+    email: email,
+    age: age || null,
+    createdAt: new Date().toISOString()
+  };
+  
+  // Add to our "database" (array)
+  users.push(newUser);
+  
+  // Send success response
+  res.status(201).json({
+    success: true,
+    message: 'User created successfully!',
+    user: newUser
+  });
+});
+
+// 404 handler - must come LAST
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.method} ${req.path} not found`
+  });
+});
+
+// Start server
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-  console.log('Press Ctrl+C to stop');
+  console.log(`Try these endpoints:`);
+  console.log(`   GET  http://localhost:${PORT}/`);
+  console.log(`   GET  http://localhost:${PORT}/health`);
+  console.log(`   GET  http://localhost:${PORT}/api/users`);
+  console.log(`   POST http://localhost:${PORT}/api/users`);
 });
