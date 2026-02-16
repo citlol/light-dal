@@ -90,6 +90,88 @@ app.post('/api/users', (req, res) => {
       message: 'Missing required fields',
       required: ['username', 'email']
     });
+
+    // Update user
+app.put('/api/users/:id', (req, res) => {
+  const userId = parseInt(req.params.id);
+  const { username, email, age } = req.body;
+  
+  // Find the user
+  const userIndex = users.findIndex(u => u.id === userId);
+  
+  if (userIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: `User with ID ${userId} not found`
+    });
+  }
+  
+  // Validation: If updating username, check it's not taken by someone else
+  if (username && username !== users[userIndex].username) {
+    const existingUser = users.find(u => u.username === username);
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username already taken'
+      });
+    }
+  }
+  
+  // Validation: Check username length if provided
+  if (username && username.length < 3) {
+    return res.status(400).json({
+      success: false,
+      message: 'Username must be at least 3 characters long'
+    });
+  }
+  
+  // Validation: Check email format if provided
+  if (email && !email.includes('@')) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid email format'
+    });
+  }
+  
+  // Update the user (only update fields that were provided)
+  if (username) users[userIndex].username = username;
+  if (email) users[userIndex].email = email;
+  if (age !== undefined) users[userIndex].age = age;
+  users[userIndex].updatedAt = new Date().toISOString();
+  
+  res.json({
+    success: true,
+    message: 'User updated successfully!',
+    user: users[userIndex]
+  });
+});
+
+// Delete user
+app.delete('/api/users/:id', (req, res) => {
+  const userId = parseInt(req.params.id);
+  
+  // Find the user
+  const userIndex = users.findIndex(u => u.id === userId);
+  
+  if (userIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: `User with ID ${userId} not found`
+    });
+  }
+  
+  // Get user info before deleting (to return in response)
+  const deletedUser = users[userIndex];
+  
+  // Remove user from array
+  users.splice(userIndex, 1);
+  
+  res.json({
+    success: true,
+    message: 'User deleted successfully!',
+    user: deletedUser
+  });
+});
   }
   
   // Validation: Check username length
