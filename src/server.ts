@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express, { Request, Response } from 'express';
+import cors from 'cors';
 import { connectDB } from './config/database';
 import authRoutes from './routes/auth';
 import wishlistRoutes from './routes/wishlist';
@@ -18,6 +19,10 @@ import {
 const app = express();
 
 // Middleware
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
 
 // Connect to MongoDB
