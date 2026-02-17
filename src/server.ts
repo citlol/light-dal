@@ -4,6 +4,7 @@ dotenv.config();
 import express, { Request, Response } from 'express';
 import { connectDB } from './config/database';
 import authRoutes from './routes/auth';
+import wishlistRoutes from './routes/wishlist';
 import { protect } from './middleware/auth';
 import User from './models/User';
 import {
@@ -30,22 +31,27 @@ connectDB();
 app.get('/', (req: Request, res: Response) => {
   res.json({
     message: 'Welcome to Wishlist API!',
-    version: '4.0.0',
+    version: '5.0.0',
     language: 'TypeScript',
     database: 'MongoDB',
-    features: ['Authentication', 'JWT Tokens', 'Password Hashing'],
+    features: ['Authentication', 'JWT Tokens', 'Private Wishlists', 'Collaborative Wishlists'],
     endpoints: {
       auth: {
         register: 'POST /api/auth/register',
         login: 'POST /api/auth/login',
         me: 'GET /api/auth/me (protected)'
       },
-      users: {
-        getAll: 'GET /api/users',
-        getOne: 'GET /api/users/:id',
-        create: 'POST /api/users',
-        update: 'PUT /api/users/:id',
-        delete: 'DELETE /api/users/:id'
+      wishlists: {
+        create: 'POST /api/wishlists',
+        getAll: 'GET /api/wishlists',
+        getOne: 'GET /api/wishlists/:id',
+        update: 'PUT /api/wishlists/:id',
+        delete: 'DELETE /api/wishlists/:id',
+        addItem: 'POST /api/wishlists/:id/items',
+        updateItem: 'PUT /api/wishlists/:id/items/:itemId',
+        deleteItem: 'DELETE /api/wishlists/:id/items/:itemId',
+        invite: 'POST /api/wishlists/:id/invite',
+        removeCollaborator: 'DELETE /api/wishlists/:id/collaborators/:userId'
       }
     }
   });
@@ -76,6 +82,7 @@ app.post('/api/echo', (req: Request, res: Response) => {
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+app.use('/api/wishlists', wishlistRoutes);
 
 // Get all users
 app.get('/api/users', protect, async (req: Request, res: Response) => {
