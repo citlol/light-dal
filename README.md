@@ -9,8 +9,9 @@ A RESTful API backend for a wishlist sharing application.
 - Dynamic routing with URL parameters
 - JSON API responses
 
-## 🛠️ Tech Stack
+## Tech Stack
 
+- TypeScript
 - Node.js
 - Express.js
 - Git & GitHub
