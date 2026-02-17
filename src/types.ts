@@ -1,14 +1,5 @@
 // Type definitions for our API
 
-export interface User {
-  id: number;
-  username: string;
-  email: string;
-  age: number | null;
-  createdAt: string;
-  updatedAt?: string;
-}
-
 export interface CreateUserRequest {
   username: string;
   email: string;
@@ -30,12 +21,13 @@ export interface ApiResponse<T = any> {
 export interface UsersResponse {
   success: boolean;
   count: number;
-  users: User[];
+  users: any[]; // Will be IUser[] from Mongoose
 }
 
 export interface UserResponse {
-  success: boolean;
-  user: User;
+  success: true;
+  message?: string;
+  user: any; // Will be IUser from Mongoose
 }
 
 export interface ErrorResponse {
